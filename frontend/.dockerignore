@@ -1,0 +1,9 @@
+# Lo que NO se envía al contexto de build (imagen liviana). El código real se
+# monta luego con un volumen en desarrollo.
+node_modules
+dist
+.git
+.gitignore
+*.md
+Dockerfile
+.dockerignore

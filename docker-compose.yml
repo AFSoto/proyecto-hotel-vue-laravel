@@ -1,6 +1,5 @@
 # Orquestación de la plataforma HotelOS.
-# FASE 2: backend (Laravel/PHP 8.2) + base de datos MySQL 8 + phpMyAdmin.
-# En la siguiente fase se añadirá el servicio "frontend" (Vue).
+# FASE 3: backend (Laravel/PHP 8.2) + MySQL 8 + phpMyAdmin + frontend (Vue/Vite).
 # Nota: en Docker Compose v2 ya no se usa la clave "version:".
 
 services:
@@ -76,6 +75,31 @@ services:
       db:
         condition: service_healthy
 
+  # ---------------------------------------------------------------------------
+  # Frontend Vue 3 / Vite (Node 22)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hotel_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"          # http://localhost:5173
+    environment:
+      # Windows + bind mount sobre NTFS: los eventos de cambio de archivo no
+      # llegan bien al contenedor Linux, así que activamos polling para que el
+      # hot-reload (HMR) de Vite funcione. chokidar respeta esta variable.
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app
+      # Volumen NOMBRADO para node_modules: las dependencias viven dentro del
+      # contenedor (Linux) y no se mezclan con las de tu Windows.
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - backend           # solo para ordenar el arranque; el navegador es quien llama a la API
+
 volumes:
   backend_vendor:
   db_data:
+  frontend_node_modules:
