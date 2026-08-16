@@ -66,7 +66,7 @@ const routes = [
         path: 'rooms',
         name: 'rooms',
         // Lazy loading (import dinámico)
-        component: () => import('@/views/DashboardView.vue'), // placeholder
+        component: () => import('@/views/RoomsView.vue'),
         meta: { requiresAuth: true, title: 'Habitaciones' }
       },
       {
