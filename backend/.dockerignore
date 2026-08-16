@@ -1,0 +1,16 @@
+# Lo que NO se envía al contexto de build de la imagen (mantiene la imagen liviana
+# y evita filtrar secretos). El código real se monta luego con un volumen en desarrollo.
+vendor
+node_modules
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+*.md
+Dockerfile
+.dockerignore

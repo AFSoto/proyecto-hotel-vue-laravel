@@ -1,0 +1,22 @@
+# Orquestación de la plataforma HotelOS.
+# FASE 1: solo el servicio backend (Laravel/PHP 8.2).
+# En fases siguientes se añadirán aquí los servicios "db" (MySQL) y "frontend" (Vue).
+# Nota: en Docker Compose v2 ya no se usa la clave "version:".
+
+services:
+  backend:
+    build:
+      context: ./backend      # el Dockerfile y el código del backend viven en ./backend
+      dockerfile: Dockerfile
+    container_name: hotel_backend
+    ports:
+      - "8000:8000"           # host:contenedor -> tu navegador entra por http://localhost:8000
+    volumes:
+      # Montamos el código fuente para tener hot-reload sin reconstruir la imagen.
+      - ./backend:/var/www/html
+      # Volumen NOMBRADO para vendor: así las dependencias viven dentro del contenedor
+      # (Linux) y no se mezclan con las de tu Windows. Se llena con `composer install`.
+      - backend_vendor:/var/www/html/vendor
+
+volumes:
+  backend_vendor:
