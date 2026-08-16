@@ -24,6 +24,7 @@ Reservas · Habitaciones · Check-in/out · Facturación
 - [Stack tecnológico](#stack-tecnológico)
 - [Arquitectura](#arquitectura)
 - [Requisitos](#requisitos)
+- [Docker (recomendado)](#docker-recomendado)
 - [Instalación — Backend](#instalación--backend)
 - [Instalación — Frontend](#instalación--frontend)
 - [Variables de entorno](#variables-de-entorno)
@@ -116,6 +117,93 @@ Antes de instalar asegúrate de tener:
 - npm >= 10.x
 - MySQL >= 8.0
 - Git
+
+---
+
+## Docker (recomendado)
+
+La forma más rápida de levantar **toda** la plataforma (frontend + backend + MySQL +
+phpMyAdmin) sin instalar PHP, Node ni MySQL en tu máquina. Cada servicio corre en su
+propio contenedor con su versión fijada, así que no choca con otras apps (p. ej. otra
+versión de PHP en XAMPP).
+
+### Requisito
+
+- **Docker Desktop** (en Windows, con backend **WSL2** activado). Verifica con:
+  ```bash
+  docker --version && docker compose version
+  ```
+
+### Servicios y puertos
+
+| Servicio | URL / acceso | Descripción |
+|---|---|---|
+| Frontend (Vue/Vite) | http://localhost:5173 | SPA con hot-reload |
+| Backend (Laravel API) | http://localhost:8000/api | API REST + JWT |
+| phpMyAdmin | http://localhost:8080 | GUI de la BD — login `root` / `1234567` |
+| MySQL | `localhost:3308` | Para GUIs externas (DBeaver, etc.). Puerto 3308 para no chocar con el MySQL de XAMPP |
+
+### Primer arranque (clon nuevo)
+
+```bash
+# Desde la raíz del repositorio
+
+# 1. Construir imágenes y levantar todos los servicios
+docker compose up -d --build
+
+# 2. (Si no tienes backend/.env todavía) crear el .env y sus llaves
+docker compose run --rm backend cp .env.example .env
+docker compose run --rm backend php artisan key:generate
+docker compose run --rm backend php artisan jwt:secret
+#    Asegúrate de que en backend/.env: SESSION_DRIVER=file y CACHE_STORE=file
+
+# 3. Instalar dependencias del backend (llena el volumen de vendor)
+docker compose run --rm backend composer install
+
+# 4. Migrar y sembrar datos de prueba
+docker compose run --rm backend php artisan migrate --seed
+
+# 5. Reiniciar el backend ya con las dependencias listas
+docker compose restart backend
+```
+
+Luego abre **http://localhost:5173** y entra con `admin@hotel.com` / `password`.
+
+> La config de base de datos para Docker (`DB_HOST=db`, `DB_PORT=3306`, credenciales)
+> la inyecta `docker-compose.yml` como variables de entorno; **no** hace falta editar tu
+> `.env`, que sigue sirviendo para correr en el host con XAMPP (`127.0.0.1`).
+
+### Arranque diario
+
+```bash
+docker compose up -d      # levantar todo (imágenes ya construidas)
+docker compose down       # apagar (los datos de MySQL persisten en el volumen db_data)
+```
+
+### Comandos útiles
+
+```bash
+docker compose logs -f backend            # ver logs en vivo (backend | frontend | db)
+docker compose exec backend php artisan … # artisan dentro del contenedor
+docker compose exec backend composer …    # composer dentro del contenedor
+docker compose exec frontend npm …        # npm dentro del contenedor
+docker compose build backend              # reconstruir tras cambiar Dockerfile o deps
+docker compose down -v                    # ⚠️ apagar y BORRAR datos/volúmenes (reset total)
+```
+
+### Notas / gotchas
+
+- **`--no-reload` en el backend**: sin esta bandera, `php artisan serve` (con su
+  auto-reload) elimina del proceso servidor las variables de entorno que le inyecta
+  Docker (`DB_HOST`, etc.) y la app terminaría leyendo el `.env` local. Ya está fijada
+  en `backend/Dockerfile`.
+- **Hot-reload en Windows**: se activa `CHOKIDAR_USEPOLLING=true` en el frontend porque
+  los eventos de archivo de NTFS no llegan bien al contenedor Linux.
+- **`npm install` (no `npm ci`)** en el frontend: el `package-lock.json` del repo está
+  desincronizado con `package.json`. Al regenerar el lock (`npm install` + commit) se
+  puede volver a `npm ci` para builds reproducibles.
+
+Si prefieres correr **sin Docker**, sigue las secciones de instalación manual a continuación.
 
 ---
 
