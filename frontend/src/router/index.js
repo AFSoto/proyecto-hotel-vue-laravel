@@ -84,7 +84,7 @@ const routes = [
       {
         path: 'room-types',
         name: 'room-types',
-        component: () => import('@/views/DashboardView.vue'), // placeholder
+        component: () => import('@/views/RoomTypesView.vue'),
         meta: {
           requiresAuth: true,
           role: 'admin', // solo admin
