@@ -2,6 +2,7 @@
 
 // Importa la clase Route para definir rutas en Laravel
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\RoomTypeController;
 use App\Http\Controllers\Api\UserController;
@@ -56,6 +57,9 @@ Route::middleware('auth:api')->group(function () {
         // CRUD usuarios
         // Registra automáticamente todas las rutas RESTful para el recurso "users"
         Route::apiResource('users', UserController::class);
+
+        // Listado de roles (catálogo para el selector de la pantalla de usuarios)
+        Route::get('roles', [RoleController::class, 'index']);
 
         // CRUD room-types  → se implementa en TASK-BE-012
         // El listado (index) se comparte con recepción más abajo; aquí solo la escritura.
