@@ -30,4 +30,8 @@ EXPOSE 8000
 
 # Comando por defecto: servidor de desarrollo accesible desde fuera del contenedor.
 # --host=0.0.0.0 es imprescindible; si no, solo escucharía dentro del contenedor y no lo verías desde Windows.
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# --no-reload es CLAVE en Docker: sin él, `php artisan serve` (con su auto-reload)
+#   elimina del proceso servidor toda variable de entorno que no esté en su lista blanca
+#   (DB_HOST, DB_PORT, etc. no lo están), y la app terminaría leyendo el .env local
+#   en vez de las variables que inyecta docker-compose. Con --no-reload las conserva.
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000", "--no-reload"]

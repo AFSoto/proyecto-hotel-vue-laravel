@@ -1,22 +1,81 @@
 # Orquestación de la plataforma HotelOS.
-# FASE 1: solo el servicio backend (Laravel/PHP 8.2).
-# En fases siguientes se añadirán aquí los servicios "db" (MySQL) y "frontend" (Vue).
+# FASE 2: backend (Laravel/PHP 8.2) + base de datos MySQL 8 + phpMyAdmin.
+# En la siguiente fase se añadirá el servicio "frontend" (Vue).
 # Nota: en Docker Compose v2 ya no se usa la clave "version:".
 
 services:
+  # ---------------------------------------------------------------------------
+  # Base de datos MySQL 8
+  # ---------------------------------------------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: hotel_db
+    restart: unless-stopped
+    environment:
+      # Inicializan el contenedor la PRIMERA vez que se crea el volumen db_data.
+      # Coinciden con las credenciales que usa el backend para conectarse.
+      MYSQL_ROOT_PASSWORD: "1234567"
+      MYSQL_DATABASE: "hotelOS"
+    ports:
+      # host:contenedor. Usamos 3308 en el host para NO chocar con un MySQL de
+      # XAMPP u otro que ya ocupe 3306/3307. Solo sirve para conectar herramientas
+      # GUI (DBeaver, HeidiSQL, etc.) desde Windows a localhost:3308.
+      - "3308:3306"
+    volumes:
+      # Los datos de MySQL persisten aquí aunque borres/recrees el contenedor.
+      - db_data:/var/lib/mysql
+    healthcheck:
+      # El backend espera a que MySQL esté REALMENTE listo (no solo "arrancando").
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # ---------------------------------------------------------------------------
+  # Backend Laravel / PHP 8.2
+  # ---------------------------------------------------------------------------
   backend:
     build:
-      context: ./backend      # el Dockerfile y el código del backend viven en ./backend
+      context: ./backend
       dockerfile: Dockerfile
     container_name: hotel_backend
+    restart: unless-stopped
     ports:
-      - "8000:8000"           # host:contenedor -> tu navegador entra por http://localhost:8000
+      - "8000:8000"          # tu navegador entra por http://localhost:8000
+    environment:
+      # OJO: estas variables PISAN a las del .env cuando la app corre en Docker
+      # (Laravel no sobreescribe una variable que ya existe en el entorno real).
+      # Así el .env sigue sirviendo para el host con XAMPP (127.0.0.1), y aquí
+      # redirigimos la conexión al servicio "db" de esta red interna.
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"        # dentro de la red de Docker SIEMPRE es 3306
+      DB_DATABASE: hotelOS
+      DB_USERNAME: root
+      DB_PASSWORD: "1234567"
     volumes:
-      # Montamos el código fuente para tener hot-reload sin reconstruir la imagen.
       - ./backend:/var/www/html
-      # Volumen NOMBRADO para vendor: así las dependencias viven dentro del contenedor
-      # (Linux) y no se mezclan con las de tu Windows. Se llena con `composer install`.
       - backend_vendor:/var/www/html/vendor
+    depends_on:
+      db:
+        condition: service_healthy   # no arranca hasta que MySQL responde
+
+  # ---------------------------------------------------------------------------
+  # phpMyAdmin (interfaz web para la BD, como la de XAMPP)
+  # ---------------------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: hotel_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"            # http://localhost:8080  (login: root / 1234567)
+    environment:
+      PMA_HOST: db           # se conecta al servicio db por la red interna
+      PMA_PORT: 3306
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   backend_vendor:
+  db_data:
