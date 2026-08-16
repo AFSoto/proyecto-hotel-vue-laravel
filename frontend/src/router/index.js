@@ -94,7 +94,7 @@ const routes = [
       {
         path: 'users',
         name: 'users',
-        component: () => import('@/views/DashboardView.vue'), // placeholder
+        component: () => import('@/views/admin/UsersView.vue'),
         meta: {
           requiresAuth: true,
           role: 'admin',
