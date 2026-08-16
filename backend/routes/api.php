@@ -58,7 +58,8 @@ Route::middleware('auth:api')->group(function () {
         Route::apiResource('users', UserController::class);
 
         // CRUD room-types  → se implementa en TASK-BE-012
-        Route::apiResource('room-types', RoomTypeController::class);
+        // El listado (index) se comparte con recepción más abajo; aquí solo la escritura.
+        Route::apiResource('room-types', RoomTypeController::class)->except(['index']);
 
         // Escritura de habitaciones (crear / editar / eliminar) → solo admin
         Route::post('rooms', [RoomController::class, 'store']);
@@ -87,5 +88,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('rooms', [RoomController::class, 'index']);
         Route::get('rooms/{id}', [RoomController::class, 'show']);
         Route::patch('rooms/{id}/status', [RoomController::class, 'updateStatus']);
+
+        // Listado de tipos de habitación (para poblar filtros/selects del front)
+        Route::get('room-types', [RoomTypeController::class, 'index']);
     });
 });
