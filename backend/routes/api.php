@@ -1,10 +1,11 @@
 <?php
 
 // Importa la clase Route para definir rutas en Laravel
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\RoomTypeController;
+use App\Http\Controllers\Api\UserController;
+use Illuminate\Support\Facades\Route;
 
 // ==============================
 // 🔓 RUTAS PÚBLICAS (sin token)
@@ -33,11 +34,11 @@ Route::middleware('auth:api')->group(function () {
         // GET /api/auth/me
         // Devuelve los datos del usuario autenticado
 
-        Route::get('me',       [AuthController::class, 'me']);
+        Route::get('me', [AuthController::class, 'me']);
 
         // POST /api/auth/logout
         // Cierra sesión (invalida el token)
-        Route::post('logout',  [AuthController::class, 'logout']);
+        Route::post('logout', [AuthController::class, 'logout']);
 
         // POST /api/auth/refresh
         // Genera un nuevo token JWT
@@ -58,6 +59,11 @@ Route::middleware('auth:api')->group(function () {
 
         // CRUD room-types  → se implementa en TASK-BE-012
         Route::apiResource('room-types', RoomTypeController::class);
+
+        // Escritura de habitaciones (crear / editar / eliminar) → solo admin
+        Route::post('rooms', [RoomController::class, 'store']);
+        Route::put('rooms/{id}', [RoomController::class, 'update']);
+        Route::delete('rooms/{id}', [RoomController::class, 'destroy']);
         // Historial        → se implementa en TASK-BE-026
     });
 
@@ -67,13 +73,19 @@ Route::middleware('auth:api')->group(function () {
 
     // Aquí irán rutas compartidas entre roles
 
-
     // Ejemplos:
     // rooms (habitaciones)
     // bookings (reservas)
     // check-ins
     // check-outs
-    Route::middleware('role:admin|recepcionista')->group(function () {
-        // rutas compartidas
+    //
+    // NOTA: el middleware 'role' separa los roles por COMA, no por pipe,
+    // y el slug real del recepcionista es 'receptionist' (ver seeder).
+    Route::middleware('role:admin,receptionist')->group(function () {
+
+        // Lectura y cambio de estado de habitaciones (admin y recepcionista)
+        Route::get('rooms', [RoomController::class, 'index']);
+        Route::get('rooms/{id}', [RoomController::class, 'show']);
+        Route::patch('rooms/{id}/status', [RoomController::class, 'updateStatus']);
     });
 });

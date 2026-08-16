@@ -3,27 +3,27 @@
 namespace App\Providers;
 
 // Clase base de proveedores de servicios en Laravel
-use Illuminate\Support\ServiceProvider;
-
-// Interfaces (contratos)
-use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
+// Interfaces (contratos)
+use App\Repositories\Contracts\RoomRepositoryInterface;
 use App\Repositories\Contracts\RoomTypeRepositoryInterface;
-
-// Implementaciones concretas
-use App\Repositories\UserRepository;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\RoleRepository;
+// Implementaciones concretas
+use App\Repositories\RoomRepository;
 use App\Repositories\RoomTypeRepository;
-
+use App\Repositories\UserRepository;
+use App\Services\AuthService;
 // Service Contracts
 use App\Services\Contracts\AuthServiceInterface;
-use App\Services\Contracts\UserServiceInterface;
+use App\Services\Contracts\RoomServiceInterface;
 use App\Services\Contracts\RoomTypeServiceInterface;
-
+use App\Services\Contracts\UserServiceInterface;
 // Service Implementations
-use App\Services\AuthService;
-use App\Services\UserService;
+use App\Services\RoomService;
 use App\Services\RoomTypeService;
+use App\Services\UserService;
+use Illuminate\Support\ServiceProvider;
 
 /**
  * AppServiceProvider
@@ -52,12 +52,16 @@ class AppServiceProvider extends ServiceProvider
         // Cuando se necesite RoomTypeRepositoryInterface, se resolverá automáticamente RoomTypeRepository
         $this->app->bind(RoomTypeRepositoryInterface::class, RoomTypeRepository::class);
 
-
+        // Repositorio de habitaciones
+        $this->app->bind(RoomRepositoryInterface::class, RoomRepository::class);
 
         // Services
         $this->app->bind(AuthServiceInterface::class, AuthService::class);
         $this->app->bind(UserServiceInterface::class, UserService::class);
         $this->app->bind(RoomTypeServiceInterface::class, RoomTypeService::class);
+
+        // Servicio de habitaciones
+        $this->app->bind(RoomServiceInterface::class, RoomService::class);
     }
 
     /**
