@@ -47,4 +47,14 @@ class GuestRepository extends BaseRepository implements GuestRepositoryInterface
             ->whereIn('status', ['confirmed', 'checked_in'])
             ->exists();
     }
+
+    /**
+     * Buscar un huésped ELIMINADO (soft delete) por su documento.
+     */
+    public function findTrashedByDocument(string $documentNumber): ?Guest
+    {
+        return $this->model->onlyTrashed()
+            ->where('document_number', $documentNumber)
+            ->first();
+    }
 }

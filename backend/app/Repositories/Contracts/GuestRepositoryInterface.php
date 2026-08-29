@@ -2,6 +2,8 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Models\Guest;
+
 /**
  * GuestRepositoryInterface
  *
@@ -15,4 +17,10 @@ interface GuestRepositoryInterface extends RepositoryInterface
      * Se usa para impedir su borrado.
      */
     public function hasActiveBookings(int $id): bool;
+
+    /**
+     * Buscar un huésped ELIMINADO (soft delete) por su documento.
+     * Se usa para restaurarlo en vez de duplicar cuando un huésped regresa.
+     */
+    public function findTrashedByDocument(string $documentNumber): ?Guest;
 }
