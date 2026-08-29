@@ -91,4 +91,17 @@ class RoomRepository extends BaseRepository implements RoomRepositoryInterface
         // Busca la habitación o lanza 404, y compara su estado
         return $this->findByIdOrFail($id)->status === 'occupied';
     }
+
+    /**
+     * Bloquear la fila de la habitación (SELECT ... FOR UPDATE).
+     *
+     * Debe llamarse DENTRO de una transacción. Serializa las operaciones de
+     * reserva de la MISMA habitación: cualquier segunda transacción sobre esta
+     * room espera al COMMIT de la primera, cerrando la ventana de doble-reserva.
+     * Respeta SoftDeletes (no bloquea habitaciones eliminadas).
+     */
+    public function lockForUpdate(int $id): Room
+    {
+        return $this->model->whereKey($id)->lockForUpdate()->firstOrFail();
+    }
 }

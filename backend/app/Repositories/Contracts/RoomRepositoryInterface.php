@@ -34,4 +34,10 @@ interface RoomRepositoryInterface extends RepositoryInterface
      *              - false → no está ocupada
      */
     public function isOccupied(int $id): bool;
+
+    /**
+     * Bloquear la fila de la habitación (SELECT ... FOR UPDATE) dentro de una
+     * transacción. Serializa las reservas concurrentes de la misma habitación.
+     */
+    public function lockForUpdate(int $id): Room;
 }
