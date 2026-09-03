@@ -3,6 +3,7 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\Room;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * RoomRepositoryInterface
@@ -15,6 +16,12 @@ use App\Models\Room;
  */
 interface RoomRepositoryInterface extends RepositoryInterface
 {
+    /**
+     * Habitaciones disponibles (sin reserva que solape) en un rango de fechas.
+     * Excluye las que están en mantenimiento y, opcionalmente, filtra por tipo.
+     */
+    public function available(string $checkIn, string $checkOut, ?int $roomTypeId = null): Collection;
+
     /**
      * Cambiar el estado de una habitación
      *

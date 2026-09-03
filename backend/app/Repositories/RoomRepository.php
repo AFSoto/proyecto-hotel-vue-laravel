@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Room;
 use App\Repositories\Contracts\RoomRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -66,6 +67,30 @@ class RoomRepository extends BaseRepository implements RoomRepositoryInterface
         return $query
             ->orderBy('number', 'asc')
             ->paginate($perPage);
+    }
+
+    /**
+     * Habitaciones disponibles en un rango de fechas.
+     *
+     * Disponible = NO está en mantenimiento y NO tiene ninguna reserva activa
+     * que solape el rango (mismo intervalo semiabierto que hasOverlap, y las
+     * canceladas no cuentan). Opcionalmente se filtra por tipo de habitación.
+     */
+    public function available(string $checkIn, string $checkOut, ?int $roomTypeId = null): Collection
+    {
+        $query = $this->model->with('roomType')
+            ->where('status', '!=', 'maintenance')
+            ->whereDoesntHave('bookings', function ($q) use ($checkIn, $checkOut) {
+                $q->where('status', '!=', 'cancelled')
+                    ->where('check_in_date', '<', $checkOut)
+                    ->where('check_out_date', '>', $checkIn);
+            });
+
+        if ($roomTypeId !== null) {
+            $query->where('room_type_id', $roomTypeId);
+        }
+
+        return $query->orderBy('number', 'asc')->get();
     }
 
     /**

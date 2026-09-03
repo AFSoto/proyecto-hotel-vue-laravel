@@ -2,6 +2,8 @@
 
 // Importa la clase Route para definir rutas en Laravel
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\GuestController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\RoomTypeController;
@@ -70,6 +72,9 @@ Route::middleware('auth:api')->group(function () {
         Route::put('rooms/{id}', [RoomController::class, 'update']);
         Route::delete('rooms/{id}', [RoomController::class, 'destroy']);
         // Historial        → se implementa en TASK-BE-026
+
+        // Borrado de huéspedes → solo admin (recepción no elimina)
+        Route::delete('guests/{id}', [GuestController::class, 'destroy']);
     });
 
     // ------------------------------
@@ -90,10 +95,26 @@ Route::middleware('auth:api')->group(function () {
 
         // Lectura y cambio de estado de habitaciones (admin y recepcionista)
         Route::get('rooms', [RoomController::class, 'index']);
+        // OJO: 'available' debe ir ANTES de 'rooms/{id}', si no {id} capturaría 'available'
+        Route::get('rooms/available', [RoomController::class, 'available']);
         Route::get('rooms/{id}', [RoomController::class, 'show']);
         Route::patch('rooms/{id}/status', [RoomController::class, 'updateStatus']);
 
         // Listado de tipos de habitación (para poblar filtros/selects del front)
         Route::get('room-types', [RoomTypeController::class, 'index']);
+
+        // Gestión de huéspedes (el borrado va en el grupo solo-admin de arriba)
+        Route::get('guests', [GuestController::class, 'index']);
+        Route::post('guests', [GuestController::class, 'store']);
+        Route::get('guests/{id}', [GuestController::class, 'show']);
+        Route::put('guests/{id}', [GuestController::class, 'update']);
+
+        // Gestión de reservas
+        Route::get('bookings', [BookingController::class, 'index']);
+        Route::post('bookings', [BookingController::class, 'store']);
+        Route::get('bookings/{id}', [BookingController::class, 'show']);
+        Route::put('bookings/{id}', [BookingController::class, 'update']);
+        // Cancelar (cambio de estado, no borrado): admin y recepción
+        Route::patch('bookings/{id}/cancel', [BookingController::class, 'cancel']);
     });
 });

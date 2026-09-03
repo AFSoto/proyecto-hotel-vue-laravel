@@ -3,23 +3,31 @@
 namespace App\Providers;
 
 // Clase base de proveedores de servicios en Laravel
-use App\Repositories\Contracts\RoleRepositoryInterface;
+use App\Repositories\BookingRepository;
+use App\Repositories\Contracts\BookingRepositoryInterface;
+use App\Repositories\Contracts\GuestRepositoryInterface;
 // Interfaces (contratos)
+use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\RoomRepositoryInterface;
 use App\Repositories\Contracts\RoomTypeRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\GuestRepository;
 use App\Repositories\RoleRepository;
 // Implementaciones concretas
 use App\Repositories\RoomRepository;
 use App\Repositories\RoomTypeRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
+use App\Services\BookingService;
 // Service Contracts
 use App\Services\Contracts\AuthServiceInterface;
+use App\Services\Contracts\BookingServiceInterface;
+use App\Services\Contracts\GuestServiceInterface;
 use App\Services\Contracts\RoomServiceInterface;
 use App\Services\Contracts\RoomTypeServiceInterface;
 use App\Services\Contracts\UserServiceInterface;
 // Service Implementations
+use App\Services\GuestService;
 use App\Services\RoomService;
 use App\Services\RoomTypeService;
 use App\Services\UserService;
@@ -55,6 +63,10 @@ class AppServiceProvider extends ServiceProvider
         // Repositorio de habitaciones
         $this->app->bind(RoomRepositoryInterface::class, RoomRepository::class);
 
+        // Repositorios de reservas y huéspedes
+        $this->app->bind(GuestRepositoryInterface::class, GuestRepository::class);
+        $this->app->bind(BookingRepositoryInterface::class, BookingRepository::class);
+
         // Services
         $this->app->bind(AuthServiceInterface::class, AuthService::class);
         $this->app->bind(UserServiceInterface::class, UserService::class);
@@ -62,6 +74,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Servicio de habitaciones
         $this->app->bind(RoomServiceInterface::class, RoomService::class);
+
+        // Servicios de reservas y huéspedes
+        $this->app->bind(GuestServiceInterface::class, GuestService::class);
+        $this->app->bind(BookingServiceInterface::class, BookingService::class);
     }
 
     /**

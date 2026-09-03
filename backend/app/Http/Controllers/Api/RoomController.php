@@ -50,6 +50,29 @@ class RoomController extends BaseController
     }
 
     /**
+     * Listar habitaciones disponibles en un rango de fechas (para reservar).
+     */
+    public function available(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'check_in_date' => ['required', 'date'],
+            'check_out_date' => ['required', 'date', 'after:check_in_date'],
+            'room_type_id' => ['nullable', 'integer'],
+        ]);
+
+        $rooms = $this->roomService->availableRooms(
+            $data['check_in_date'],
+            $data['check_out_date'],
+            isset($data['room_type_id']) ? (int) $data['room_type_id'] : null,
+        );
+
+        return $this->success(
+            RoomResource::collection($rooms),
+            'Habitaciones disponibles.'
+        );
+    }
+
+    /**
      * Crear una habitación
      */
     public function store(StoreRoomRequest $request): JsonResponse

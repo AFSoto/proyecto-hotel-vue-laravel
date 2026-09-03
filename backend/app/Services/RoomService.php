@@ -5,8 +5,10 @@ namespace App\Services;
 use App\DTOs\CreateRoomDTO;
 use App\DTOs\UpdateRoomDTO;
 use App\Models\Room;
+use App\Repositories\Contracts\BookingRepositoryInterface;
 use App\Repositories\Contracts\RoomRepositoryInterface;
 use App\Services\Contracts\RoomServiceInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -24,7 +26,8 @@ class RoomService extends BaseService implements RoomServiceInterface
      * Inyecta el repositorio por su interfaz (desacoplamiento).
      */
     public function __construct(
-        private RoomRepositoryInterface $roomRepository
+        private RoomRepositoryInterface $roomRepository,
+        private BookingRepositoryInterface $bookingRepository,
     ) {
         parent::__construct($roomRepository);
     }
@@ -35,6 +38,14 @@ class RoomService extends BaseService implements RoomServiceInterface
     public function listRooms(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         return $this->roomRepository->paginate($perPage, $filters);
+    }
+
+    /**
+     * Listar habitaciones disponibles en un rango de fechas (para reservar).
+     */
+    public function availableRooms(string $checkIn, string $checkOut, ?int $roomTypeId = null): Collection
+    {
+        return $this->roomRepository->available($checkIn, $checkOut, $roomTypeId);
     }
 
     /**
@@ -83,6 +94,14 @@ class RoomService extends BaseService implements RoomServiceInterface
         if ($this->roomRepository->isOccupied($id)) {
             throw new ConflictHttpException(
                 'No se puede eliminar una habitación que está ocupada.'
+            );
+        }
+
+        // Tampoco si tiene reservas activas (confirmadas o con check-in):
+        // borrarla dejaría reservas huérfanas apuntando a una habitación eliminada.
+        if ($this->bookingRepository->roomHasActiveBookings($id)) {
+            throw new ConflictHttpException(
+                'No se puede eliminar una habitación con reservas activas.'
             );
         }
 
