@@ -72,7 +72,7 @@ const routes = [
       {
         path: 'bookings',
         name: 'bookings',
-        component: () => import('@/views/DashboardView.vue'), // placeholder
+        component: () => import('@/views/BookingsView.vue'),
         meta: { requiresAuth: true, title: 'Reservas' }
       },
       {
