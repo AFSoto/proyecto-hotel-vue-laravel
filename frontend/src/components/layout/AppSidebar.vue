@@ -231,6 +231,7 @@ import {
   CalendarCheck,
   DoorOpen,
   Users,
+  UserRound,
   History,
   PanelLeftClose,
   PanelLeftOpen
@@ -304,6 +305,7 @@ const menuGroups = [
     items: [
       { to: '/app/rooms', label: 'Habitaciones', icon: BedDouble, roles: ['admin', 'receptionist'] },
       { to: '/app/bookings', label: 'Reservas', icon: CalendarCheck, roles: ['admin', 'receptionist'] },
+      { to: '/app/guests', label: 'Huéspedes', icon: UserRound, roles: ['admin', 'receptionist'] },
       { to: '/app/check-in-out', label: 'Check-in / out', icon: DoorOpen, roles: ['admin', 'receptionist'] }
     ]
   },

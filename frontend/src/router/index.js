@@ -76,6 +76,13 @@ const routes = [
         meta: { requiresAuth: true, title: 'Reservas' }
       },
       {
+        path: 'guests',
+        name: 'guests',
+        // Admin y recepción (sin meta.role → cualquier usuario autenticado)
+        component: () => import('@/views/GuestsView.vue'),
+        meta: { requiresAuth: true, title: 'Huéspedes' }
+      },
+      {
         path: 'check-in-out',
         name: 'check-in-out',
         component: () => import('@/views/DashboardView.vue'), // placeholder
