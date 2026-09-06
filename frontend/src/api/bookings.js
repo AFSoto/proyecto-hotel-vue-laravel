@@ -29,4 +29,14 @@ export const bookingsApi = {
   cancelar(id) {
     return api.patch(`/bookings/${id}/cancel`)
   },
+
+  // PATCH /bookings/{id}/check-in — registrar entrada (confirmada → checked_in)
+  checkIn(id) {
+    return api.patch(`/bookings/${id}/check-in`)
+  },
+
+  // PATCH /bookings/{id}/check-out — registrar salida (checked_in → checked_out)
+  checkOut(id) {
+    return api.patch(`/bookings/${id}/check-out`)
+  },
 }

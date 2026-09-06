@@ -111,6 +111,28 @@ export function useBookings() {
     }
   }
 
+  // Check-in (confirmada → checked_in). El 409 se propaga a la vista.
+  async function checkIn(id) {
+    saving.value = true
+    try {
+      await bookingsApi.checkIn(id)
+      await cargar()
+    } finally {
+      saving.value = false
+    }
+  }
+
+  // Check-out (checked_in → checked_out). El 409 se propaga a la vista.
+  async function checkOut(id) {
+    saving.value = true
+    try {
+      await bookingsApi.checkOut(id)
+      await cargar()
+    } finally {
+      saving.value = false
+    }
+  }
+
   function resetErrors() {
     errors.value = {}
   }
@@ -156,6 +178,8 @@ export function useBookings() {
     crear,
     actualizar,
     cancelar,
+    checkIn,
+    checkOut,
     resetErrors,
   }
 }

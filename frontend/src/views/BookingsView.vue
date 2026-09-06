@@ -74,12 +74,24 @@
 
       <!-- Acciones -->
       <template #cell-actions="{ row }">
-        <div class="flex gap-2">
-          <!-- Solo se edita/cancela desde 'confirmed' -->
+        <div class="flex flex-wrap gap-2">
+          <!-- Confirmada: check-in, editar o cancelar -->
           <template v-if="row.status === 'confirmed'">
+            <AppButton size="sm" @click="pedirAccion(row, 'checkin')">Check-in</AppButton>
             <AppButton size="sm" variant="ghost" @click="abrirEditar(row)">Editar</AppButton>
-            <AppButton size="sm" variant="danger" @click="pedirCancelar(row)">Cancelar</AppButton>
+            <AppButton size="sm" variant="danger" @click="pedirAccion(row, 'cancelar')">Cancelar</AppButton>
           </template>
+
+          <!-- Con check-in hecho: solo queda el check-out -->
+          <AppButton
+            v-else-if="row.status === 'checked_in'"
+            size="sm"
+            @click="pedirAccion(row, 'checkout')"
+          >
+            Check-out
+          </AppButton>
+
+          <!-- Cerrada o cancelada: sin acciones -->
           <span v-else class="text-xs text-gray-400">—</span>
         </div>
       </template>
@@ -98,15 +110,15 @@
       @submit="guardar"
     />
 
-    <!-- Confirmación de cancelación -->
+    <!-- Confirmación de acción (cancelar / check-in / check-out) -->
     <ConfirmDialog
       :open="confirmOpen"
-      title="Cancelar reserva"
-      :message="mensajeCancelar"
-      confirm-label="Cancelar reserva"
-      danger
+      :title="confirmConfig.title"
+      :message="confirmConfig.message"
+      :confirm-label="confirmConfig.confirmLabel"
+      :danger="confirmConfig.danger"
       :loading="saving"
-      @confirm="confirmarCancelar"
+      @confirm="ejecutarAccion"
       @cancel="confirmOpen = false"
     />
   </div>
@@ -144,6 +156,8 @@ const {
   crear,
   actualizar,
   cancelar,
+  checkIn,
+  checkOut,
   resetErrors,
 } = useBookings()
 
@@ -202,29 +216,64 @@ async function guardar(payload) {
   }
 }
 
-// ─── Cancelación ────────────────────────────────
+// ─── Acciones con confirmación (cancelar / check-in / check-out) ──
 const confirmOpen = ref(false)
 const seleccionada = ref(null)
+const accionPendiente = ref(null) // 'cancelar' | 'checkin' | 'checkout'
 
-const mensajeCancelar = computed(() => {
+const confirmConfig = computed(() => {
   const b = seleccionada.value
-  if (!b) return ''
-  return `¿Cancelar la reserva de ${b.guest?.full_name ?? 'este huésped'} en la habitación ${b.room?.number ?? ''}? Esta acción no se puede deshacer.`
+  const nombre = b?.guest?.full_name ?? 'este huésped'
+  const hab = b?.room?.number ?? ''
+
+  switch (accionPendiente.value) {
+    case 'checkin':
+      return {
+        title: 'Registrar check-in',
+        message: `¿Registrar la entrada de ${nombre} en la habitación ${hab}? La habitación quedará ocupada.`,
+        confirmLabel: 'Confirmar check-in',
+        danger: false,
+      }
+    case 'checkout':
+      return {
+        title: 'Registrar check-out',
+        message: `¿Registrar la salida de ${nombre}? La habitación ${hab} quedará disponible.`,
+        confirmLabel: 'Confirmar check-out',
+        danger: false,
+      }
+    default:
+      return {
+        title: 'Cancelar reserva',
+        message: `¿Cancelar la reserva de ${nombre} en la habitación ${hab}? Esta acción no se puede deshacer.`,
+        confirmLabel: 'Cancelar reserva',
+        danger: true,
+      }
+  }
 })
 
-function pedirCancelar(booking) {
+function pedirAccion(booking, accion) {
   seleccionada.value = booking
+  accionPendiente.value = accion
   confirmOpen.value = true
 }
 
-async function confirmarCancelar() {
+async function ejecutarAccion() {
+  const id = seleccionada.value.id
   try {
-    await cancelar(seleccionada.value.id)
-    toast.success('Reserva cancelada.')
-    confirmOpen.value = false
+    if (accionPendiente.value === 'checkin') {
+      await checkIn(id)
+      toast.success('Check-in registrado.')
+    } else if (accionPendiente.value === 'checkout') {
+      await checkOut(id)
+      toast.success('Check-out registrado.')
+    } else {
+      await cancelar(id)
+      toast.success('Reserva cancelada.')
+    }
   } catch (e) {
-    // Regla de negocio: solo se cancela desde 'confirmed' (409)
-    toast.error(e.response?.data?.message || 'No se pudo cancelar la reserva.')
+    // Guardas de negocio (409) u otros errores
+    toast.error(e.response?.data?.message || 'No se pudo completar la acción.')
+  } finally {
     confirmOpen.value = false
   }
 }
