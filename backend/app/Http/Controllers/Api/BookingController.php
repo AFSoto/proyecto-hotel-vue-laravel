@@ -118,4 +118,40 @@ class BookingController extends BaseController
             return $this->error($e->getMessage(), 409);
         }
     }
+
+    /**
+     * Registrar entrada del huésped (check-in)
+     */
+    public function checkIn(int $id): JsonResponse
+    {
+        try {
+            $booking = $this->bookingService->checkIn($id);
+
+            return $this->success(
+                new BookingResource($booking),
+                'Check-in registrado exitosamente.'
+            );
+        } catch (ConflictHttpException $e) {
+            // Estado inválido o aún no es la fecha de entrada
+            return $this->error($e->getMessage(), 409);
+        }
+    }
+
+    /**
+     * Registrar salida del huésped (check-out)
+     */
+    public function checkOut(int $id): JsonResponse
+    {
+        try {
+            $booking = $this->bookingService->checkOut($id);
+
+            return $this->success(
+                new BookingResource($booking),
+                'Check-out registrado exitosamente.'
+            );
+        } catch (ConflictHttpException $e) {
+            // Solo desde una reserva con check-in
+            return $this->error($e->getMessage(), 409);
+        }
+    }
 }

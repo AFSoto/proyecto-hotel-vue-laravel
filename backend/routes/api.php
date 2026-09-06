@@ -116,5 +116,9 @@ Route::middleware('auth:api')->group(function () {
         Route::put('bookings/{id}', [BookingController::class, 'update']);
         // Cancelar (cambio de estado, no borrado): admin y recepción
         Route::patch('bookings/{id}/cancel', [BookingController::class, 'cancel']);
+
+        // Check-in / check-out (movimientos de recepción)
+        Route::patch('bookings/{id}/check-in', [BookingController::class, 'checkIn']);
+        Route::patch('bookings/{id}/check-out', [BookingController::class, 'checkOut']);
     });
 });
