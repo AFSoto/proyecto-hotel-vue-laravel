@@ -85,7 +85,7 @@ const routes = [
       {
         path: 'check-in-out',
         name: 'check-in-out',
-        component: () => import('@/views/DashboardView.vue'), // placeholder
+        component: () => import('@/views/CheckInOutView.vue'),
         meta: { requiresAuth: true, title: 'Check-in / Check-out' }
       },
       {
