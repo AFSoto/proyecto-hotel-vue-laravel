@@ -194,4 +194,35 @@ class BookingApiTest extends TestCase
             ->deleteJson("/api/guests/{$guest->id}")
             ->assertStatus(403);
     }
+
+    public function test_filtro_check_in_to_devuelve_solo_las_llegadas_hasta_la_fecha(): void
+    {
+        $guest = Guest::factory()->create();
+        $room = $this->availableRoom();
+        $headers = $this->headersFor();
+
+        // Llega hoy
+        $hoy = $this->withHeaders($headers)->postJson('/api/bookings', [
+            'guest_id' => $guest->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addDays(2)->toDateString(),
+        ])->json('data.id');
+
+        // Llega en 10 días (misma habitación, sin solape)
+        $futura = $this->withHeaders($headers)->postJson('/api/bookings', [
+            'guest_id' => $guest->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->addDays(10)->toDateString(),
+            'check_out_date' => now()->addDays(12)->toDateString(),
+        ])->json('data.id');
+
+        $res = $this->withHeaders($headers)->getJson(
+            '/api/bookings?status=confirmed&check_in_to='.now()->toDateString()
+        )->assertOk();
+
+        $ids = collect($res->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($hoy));
+        $this->assertFalse($ids->contains($futura));
+    }
 }

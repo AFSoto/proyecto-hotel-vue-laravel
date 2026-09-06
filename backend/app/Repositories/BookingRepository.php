@@ -54,6 +54,16 @@ class BookingRepository extends BaseRepository implements BookingRepositoryInter
                 ->where('check_out_date', '>', $filters['from']);
         }
 
+        // Entradas hasta una fecha (llegadas pendientes): check_in_date <= X
+        if (isset($filters['check_in_to'])) {
+            $query->where('check_in_date', '<=', $filters['check_in_to']);
+        }
+
+        // Salidas hasta una fecha (salidas pendientes): check_out_date <= X
+        if (isset($filters['check_out_to'])) {
+            $query->where('check_out_date', '<=', $filters['check_out_to']);
+        }
+
         return $query->orderBy('check_in_date', 'desc')->paginate($perPage);
     }
 

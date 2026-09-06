@@ -30,7 +30,7 @@ class BookingController extends BaseController
     public function index(Request $request): JsonResponse
     {
         // Filtros soportados por el repositorio
-        $filters = $request->only(['status', 'room_id', 'guest_id', 'search', 'from', 'to']);
+        $filters = $request->only(['status', 'room_id', 'guest_id', 'search', 'from', 'to', 'check_in_to', 'check_out_to']);
 
         $perPage = $request->input('per_page', 15);
 
