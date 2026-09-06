@@ -27,6 +27,8 @@ class Booking extends Model
         'check_in_date',
         'check_out_date',
         'status',
+        'checked_in_at',
+        'checked_out_at',
         'total_price',
         'notes',
     ];
@@ -34,13 +36,16 @@ class Booking extends Model
     /**
      * Casts
      *
-     * Fechas como date (sin hora) y precio con 2 decimales.
+     * Fechas de estancia como date (sin hora); los movimientos de check-in/out
+     * como datetime; precio con 2 decimales.
      */
     protected function casts(): array
     {
         return [
             'check_in_date' => 'date',
             'check_out_date' => 'date',
+            'checked_in_at' => 'datetime',
+            'checked_out_at' => 'datetime',
             'total_price' => 'decimal:2',
         ];
     }

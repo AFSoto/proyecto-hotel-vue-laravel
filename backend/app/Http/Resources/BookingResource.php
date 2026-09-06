@@ -25,6 +25,10 @@ class BookingResource extends JsonResource
             'total_price' => $this->total_price,
             'notes' => $this->notes,
 
+            // Marcas de tiempo reales de los movimientos (null si aún no ocurren)
+            'checked_in_at' => $this->checked_in_at?->toISOString(),
+            'checked_out_at' => $this->checked_out_at?->toISOString(),
+
             // IDs planos siempre disponibles
             'guest_id' => $this->guest_id,
             'room_id' => $this->room_id,

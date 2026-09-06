@@ -23,4 +23,8 @@ interface BookingServiceInterface
     public function updateBooking(int $id, UpdateBookingDTO $dto): Booking;
 
     public function cancelBooking(int $id): Booking;
+
+    public function checkIn(int $id): Booking;
+
+    public function checkOut(int $id): Booking;
 }

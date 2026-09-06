@@ -133,6 +133,65 @@ class BookingService extends BaseService implements BookingServiceInterface
     }
 
     /**
+     * Registrar la entrada del huésped (check-in): confirmed → checked_in.
+     *
+     * Solo desde 'confirmed' y no antes de la fecha de entrada. Marca la
+     * habitación como ocupada y guarda la hora real del movimiento.
+     */
+    public function checkIn(int $id): Booking
+    {
+        return DB::transaction(function () use ($id) {
+            $booking = $this->bookingRepository->findByIdOrFail($id);
+
+            if ($booking->status !== 'confirmed') {
+                throw new ConflictHttpException('Solo se puede hacer check-in de una reserva confirmada.');
+            }
+
+            // No se puede entrar antes de la fecha de entrada
+            if (Carbon::today()->lt($booking->check_in_date)) {
+                throw new ConflictHttpException('Aún no es la fecha de entrada de la reserva.');
+            }
+
+            $this->bookingRepository->update($id, [
+                'status' => 'checked_in',
+                'checked_in_at' => Carbon::now(),
+            ]);
+
+            // La habitación pasa a ocupada
+            $this->roomRepository->changeStatus($booking->room_id, 'occupied');
+
+            return $this->bookingRepository->findByIdOrFail($id)->load(['guest', 'room.roomType']);
+        });
+    }
+
+    /**
+     * Registrar la salida del huésped (check-out): checked_in → checked_out.
+     *
+     * Solo desde 'checked_in'. Libera la habitación (available) y guarda la
+     * hora real del movimiento.
+     */
+    public function checkOut(int $id): Booking
+    {
+        return DB::transaction(function () use ($id) {
+            $booking = $this->bookingRepository->findByIdOrFail($id);
+
+            if ($booking->status !== 'checked_in') {
+                throw new ConflictHttpException('Solo se puede hacer check-out de una reserva con check-in.');
+            }
+
+            $this->bookingRepository->update($id, [
+                'status' => 'checked_out',
+                'checked_out_at' => Carbon::now(),
+            ]);
+
+            // La habitación queda libre otra vez
+            $this->roomRepository->changeStatus($booking->room_id, 'available');
+
+            return $this->bookingRepository->findByIdOrFail($id)->load(['guest', 'room.roomType']);
+        });
+    }
+
+    /**
      * Total = tarifa base por noche * nº de noches (mínimo 1).
      * Se calcula sobre fecha-sin-hora para evitar off-by-one.
      */
