@@ -7,7 +7,11 @@
         <p class="text-sm text-gray-500">Gestión de reservas del hotel</p>
       </div>
 
-      <!-- El alta de reservas (modal con disponibilidad) llega en la Parte 3 -->
+      <!-- Admin y recepción pueden crear reservas -->
+      <AppButton @click="abrirCrear">
+        <Plus class="w-4 h-4" />
+        Nueva reserva
+      </AppButton>
     </div>
 
     <!-- Filtros -->
@@ -71,19 +75,28 @@
       <!-- Acciones -->
       <template #cell-actions="{ row }">
         <div class="flex gap-2">
-          <!-- Solo se cancela desde 'confirmed' -->
-          <AppButton
-            v-if="row.status === 'confirmed'"
-            size="sm"
-            variant="danger"
-            @click="pedirCancelar(row)"
-          >
-            Cancelar
-          </AppButton>
+          <!-- Solo se edita/cancela desde 'confirmed' -->
+          <template v-if="row.status === 'confirmed'">
+            <AppButton size="sm" variant="ghost" @click="abrirEditar(row)">Editar</AppButton>
+            <AppButton size="sm" variant="danger" @click="pedirCancelar(row)">Cancelar</AppButton>
+          </template>
           <span v-else class="text-xs text-gray-400">—</span>
         </div>
       </template>
     </AppTable>
+
+    <!-- Alta / edición de reserva -->
+    <BookingFormModal
+      :open="formOpen"
+      :mode="formMode"
+      :saving="saving"
+      :errors="errors"
+      :booking="seleccionada"
+      :guests="guests"
+      :room-types="roomTypes"
+      @close="formOpen = false"
+      @submit="guardar"
+    />
 
     <!-- Confirmación de cancelación -->
     <ConfirmDialog
@@ -101,6 +114,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { Plus } from 'lucide-vue-next'
 
 import { useBookings } from '@/composables/useBookings'
 import { useToast } from '@/composables/useToast'
@@ -111,10 +125,27 @@ import AppBadge from '@/components/common/AppBadge.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import AppInput from '@/components/common/AppInput.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import BookingFormModal from '@/components/bookings/BookingFormModal.vue'
 
 const toast = useToast()
 
-const { bookings, loading, saving, meta, filtros, cargar, cancelar } = useBookings()
+const {
+  bookings,
+  guests,
+  roomTypes,
+  loading,
+  saving,
+  errors,
+  meta,
+  filtros,
+  cargar,
+  cargarGuests,
+  cargarRoomTypes,
+  crear,
+  actualizar,
+  cancelar,
+  resetErrors,
+} = useBookings()
 
 const selectClass =
   'rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition-colors bg-white focus:border-[#1A2B4A] focus:ring-2 focus:ring-blue-100'
@@ -132,6 +163,44 @@ const statusLabel = (s) => BOOKING_STATUS_LABELS[s] ?? s
 
 const formatMoney = (v) =>
   `$ ${Number(v).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+// ─── Crear / Editar ─────────────────────────────
+const formOpen = ref(false)
+const formMode = ref('crear')
+
+function abrirCrear() {
+  seleccionada.value = null
+  formMode.value = 'crear'
+  resetErrors()
+  formOpen.value = true
+}
+
+function abrirEditar(booking) {
+  seleccionada.value = booking
+  formMode.value = 'editar'
+  resetErrors()
+  formOpen.value = true
+}
+
+async function guardar(payload) {
+  try {
+    if (formMode.value === 'editar') {
+      await actualizar(seleccionada.value.id, payload)
+      toast.success('Reserva actualizada.')
+    } else {
+      await crear(payload)
+      toast.success('Reserva creada.')
+    }
+    formOpen.value = false
+  } catch (e) {
+    // 422 → se muestra por campo en el modal; 409 (mantenimiento/solape) → toast
+    if (e.response?.status === 409) {
+      toast.error(e.response?.data?.message || 'La habitación no está disponible.')
+    } else if (e.response?.status !== 422) {
+      toast.error(e.response?.data?.message || 'Ocurrió un error.')
+    }
+  }
+}
 
 // ─── Cancelación ────────────────────────────────
 const confirmOpen = ref(false)
@@ -160,8 +229,10 @@ async function confirmarCancelar() {
   }
 }
 
-// Carga inicial
+// Carga inicial: lista + catálogos para el formulario
 onMounted(() => {
   cargar()
+  cargarGuests()
+  cargarRoomTypes()
 })
 </script>

@@ -4,10 +4,14 @@
 
 import { ref, reactive, watch } from 'vue'
 import { bookingsApi } from '@/api/bookings'
+import { guestsApi } from '@/api/guests'
+import { roomTypesApi } from '@/api/roomTypes'
 
 export function useBookings() {
   // ─── Estado ─────────────────────────────────────
   const bookings = ref([])
+  const guests = ref([]) // para el <select> de huésped del formulario
+  const roomTypes = ref([]) // para el filtro de tipo dentro del formulario
   const loading = ref(false)
   const saving = ref(false)
   const errors = ref({}) // errores de validación (422) por campo
@@ -45,6 +49,25 @@ export function useBookings() {
       meta.value = data.meta
     } finally {
       loading.value = false
+    }
+  }
+
+  // Catálogos para los selects del formulario. Degradan a lista vacía sin romper.
+  async function cargarGuests() {
+    try {
+      const { data } = await guestsApi.listar({ per_page: 100 })
+      guests.value = data.data
+    } catch {
+      guests.value = []
+    }
+  }
+
+  async function cargarRoomTypes() {
+    try {
+      const { data } = await roomTypesApi.listar({ per_page: 100 })
+      roomTypes.value = data.data
+    } catch {
+      roomTypes.value = []
     }
   }
 
@@ -120,12 +143,16 @@ export function useBookings() {
 
   return {
     bookings,
+    guests,
+    roomTypes,
     loading,
     saving,
     errors,
     meta,
     filtros,
     cargar,
+    cargarGuests,
+    cargarRoomTypes,
     crear,
     actualizar,
     cancelar,

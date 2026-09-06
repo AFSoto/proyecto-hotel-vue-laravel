@@ -10,6 +10,11 @@ export const roomsApi = {
     return api.get('/rooms', { params })
   },
 
+  // GET /rooms/available — habitaciones libres en un rango (params: check_in_date, check_out_date, room_type_id?)
+  disponibles(params = {}) {
+    return api.get('/rooms/available', { params })
+  },
+
   // GET /rooms/{id}
   obtener(id) {
     return api.get(`/rooms/${id}`)
