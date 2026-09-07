@@ -29,4 +29,15 @@ interface BookingRepositoryInterface extends RepositoryInterface
      * Se usa para impedir el borrado de la habitación.
      */
     public function roomHasActiveBookings(int $roomId): bool;
+
+    /**
+     * Agregados (por estado, ingresos, noches) de las reservas cuya entrada
+     * cae en el rango [from, to].
+     */
+    public function aggregatesBetween(string $from, string $to): array;
+
+    /**
+     * Conteos pendientes a una fecha: llegadas y salidas.
+     */
+    public function pendingCounts(string $date): array;
 }

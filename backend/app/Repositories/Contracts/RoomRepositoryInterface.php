@@ -47,4 +47,9 @@ interface RoomRepositoryInterface extends RepositoryInterface
      * transacción. Serializa las reservas concurrentes de la misma habitación.
      */
     public function lockForUpdate(int $id): Room;
+
+    /**
+     * Conteo de habitaciones por estado (available|occupied|maintenance) + total.
+     */
+    public function countByStatus(): array;
 }

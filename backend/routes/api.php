@@ -4,6 +4,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\GuestController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\RoomTypeController;
@@ -120,5 +121,8 @@ Route::middleware('auth:api')->group(function () {
         // Check-in / check-out (movimientos de recepción)
         Route::patch('bookings/{id}/check-in', [BookingController::class, 'checkIn']);
         Route::patch('bookings/{id}/check-out', [BookingController::class, 'checkOut']);
+
+        // Reportes / indicadores (dashboard)
+        Route::get('reports/summary', [ReportController::class, 'summary']);
     });
 });

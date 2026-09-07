@@ -23,11 +23,13 @@ use App\Services\BookingService;
 use App\Services\Contracts\AuthServiceInterface;
 use App\Services\Contracts\BookingServiceInterface;
 use App\Services\Contracts\GuestServiceInterface;
+use App\Services\Contracts\ReportServiceInterface;
 use App\Services\Contracts\RoomServiceInterface;
 use App\Services\Contracts\RoomTypeServiceInterface;
 use App\Services\Contracts\UserServiceInterface;
 // Service Implementations
 use App\Services\GuestService;
+use App\Services\ReportService;
 use App\Services\RoomService;
 use App\Services\RoomTypeService;
 use App\Services\UserService;
@@ -78,6 +80,9 @@ class AppServiceProvider extends ServiceProvider
         // Servicios de reservas y huéspedes
         $this->app->bind(GuestServiceInterface::class, GuestService::class);
         $this->app->bind(BookingServiceInterface::class, BookingService::class);
+
+        // Servicio de reportes
+        $this->app->bind(ReportServiceInterface::class, ReportService::class);
     }
 
     /**

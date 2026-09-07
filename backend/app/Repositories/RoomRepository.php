@@ -118,6 +118,26 @@ class RoomRepository extends BaseRepository implements RoomRepositoryInterface
     }
 
     /**
+     * Conteo de habitaciones (activas) por estado, con total.
+     * Los SoftDeletes excluyen automáticamente las eliminadas.
+     */
+    public function countByStatus(): array
+    {
+        $counts = $this->model
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->all();
+
+        return [
+            'total' => array_sum($counts),
+            'available' => (int) ($counts['available'] ?? 0),
+            'occupied' => (int) ($counts['occupied'] ?? 0),
+            'maintenance' => (int) ($counts['maintenance'] ?? 0),
+        ];
+    }
+
+    /**
      * Bloquear la fila de la habitación (SELECT ... FOR UPDATE).
      *
      * Debe llamarse DENTRO de una transacción. Serializa las operaciones de

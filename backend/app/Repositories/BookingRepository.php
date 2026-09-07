@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Booking;
 use App\Repositories\Contracts\BookingRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 
 /**
  * BookingRepository
@@ -105,5 +106,66 @@ class BookingRepository extends BaseRepository implements BookingRepositoryInter
             ->where('room_id', $roomId)
             ->whereIn('status', ['confirmed', 'checked_in'])
             ->exists();
+    }
+
+    /**
+     * Agregados de reservas cuya ENTRADA cae en el rango [from, to].
+     *
+     * - by_status: conteo por estado (incluye canceladas)
+     * - revenue / nights_sold: solo reservas NO canceladas
+     * Las noches se suman en PHP para no depender de SQL específico del motor.
+     */
+    public function aggregatesBetween(string $from, string $to): array
+    {
+        $base = $this->model->whereBetween('check_in_date', [$from, $to]);
+
+        $counts = (clone $base)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->all();
+
+        $byStatus = [
+            'confirmed' => (int) ($counts['confirmed'] ?? 0),
+            'checked_in' => (int) ($counts['checked_in'] ?? 0),
+            'checked_out' => (int) ($counts['checked_out'] ?? 0),
+            'cancelled' => (int) ($counts['cancelled'] ?? 0),
+        ];
+
+        $noCanceladas = (clone $base)->where('status', '!=', 'cancelled');
+
+        $revenue = (float) (clone $noCanceladas)->sum('total_price');
+
+        $nights = 0;
+        foreach ((clone $noCanceladas)->get(['check_in_date', 'check_out_date']) as $b) {
+            $nights += (int) round(
+                Carbon::parse($b->check_in_date)->diffInDays(Carbon::parse($b->check_out_date))
+            );
+        }
+
+        return [
+            'total' => array_sum($byStatus),
+            'by_status' => $byStatus,
+            'revenue' => round($revenue, 2),
+            'nights_sold' => $nights,
+        ];
+    }
+
+    /**
+     * Conteos pendientes a una fecha: llegadas (confirmadas con entrada <= fecha)
+     * y salidas (con check-in hecho y salida <= fecha).
+     */
+    public function pendingCounts(string $date): array
+    {
+        return [
+            'arrivals' => (int) $this->model
+                ->where('status', 'confirmed')
+                ->where('check_in_date', '<=', $date)
+                ->count(),
+            'departures' => (int) $this->model
+                ->where('status', 'checked_in')
+                ->where('check_out_date', '<=', $date)
+                ->count(),
+        ];
     }
 }
