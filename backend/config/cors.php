@@ -16,12 +16,15 @@ return [
     // Solo las peticiones desde estas URLs serán aceptadas.
     'allowed_origins' => [
         'http://localhost:5173',  // Servidor de desarrollo de Vue con Vite
+        'http://localhost:5175',  // Puerto host actual del frontend en Docker
         'http://localhost:3000',  // Otro puerto común (React / pruebas)
     ],
 
-    // Permite usar patrones dinámicos con expresiones regulares.
-    // Como está vacío, no se están usando patrones.
-    'allowed_origins_patterns' => [],
+    // Patrón: acepta cualquier puerto de localhost (evita romper CORS si el
+    // puerto del frontend cambia de nuevo en desarrollo).
+    'allowed_origins_patterns' => [
+        '#^http://localhost:\d+$#',
+    ],
 
     // Headers permitidos en la petición.
     // '*' permite todos, por ejemplo:
