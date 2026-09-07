@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\DateOnly;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,8 +43,8 @@ class Booking extends Model
     protected function casts(): array
     {
         return [
-            'check_in_date' => 'date',
-            'check_out_date' => 'date',
+            'check_in_date' => DateOnly::class,
+            'check_out_date' => DateOnly::class,
             'checked_in_at' => 'datetime',
             'checked_out_at' => 'datetime',
             'total_price' => 'decimal:2',
