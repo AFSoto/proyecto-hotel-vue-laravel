@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Booking;
 use App\Repositories\Contracts\BookingRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 
@@ -149,6 +150,21 @@ class BookingRepository extends BaseRepository implements BookingRepositoryInter
             'revenue' => round($revenue, 2),
             'nights_sold' => $nights,
         ];
+    }
+
+    /**
+     * Reservas NO canceladas que solapan la ventana [from, to] (para el
+     * tablero de ocupación). Trae huésped y habitación. Intervalo medio-abierto:
+     * solapa si check_in_date <= to AND check_out_date > from.
+     */
+    public function overlappingBetween(string $from, string $to): Collection
+    {
+        return $this->model->with(['guest', 'room'])
+            ->where('status', '!=', 'cancelled')
+            ->where('check_in_date', '<=', $to)
+            ->where('check_out_date', '>', $from)
+            ->orderBy('check_in_date')
+            ->get();
     }
 
     /**

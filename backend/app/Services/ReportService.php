@@ -43,4 +43,40 @@ class ReportService implements ReportServiceInterface
             'today' => $pending,
         ];
     }
+
+    public function occupancy(?string $from = null, ?string $to = null): array
+    {
+        // Ventana por defecto: 14 días desde hoy
+        $from = $from ?: Carbon::today()->toDateString();
+        $to = $to ?: Carbon::parse($from)->addDays(13)->toDateString();
+
+        $rooms = $this->roomRepository->getAll()
+            ->load('roomType')
+            ->sortBy('number')
+            ->values()
+            ->map(fn ($r) => [
+                'id' => $r->id,
+                'number' => $r->number,
+                'floor' => $r->floor,
+                'status' => $r->status,
+                'room_type' => $r->roomType ? ['id' => $r->roomType->id, 'name' => $r->roomType->name] : null,
+            ]);
+
+        $bookings = $this->bookingRepository->overlappingBetween($from, $to)
+            ->map(fn ($b) => [
+                'id' => $b->id,
+                'room_id' => $b->room_id,
+                'guest_name' => $b->guest?->full_name,
+                'check_in_date' => $b->check_in_date->toDateString(),
+                'check_out_date' => $b->check_out_date->toDateString(),
+                'status' => $b->status,
+            ])
+            ->values();
+
+        return [
+            'range' => ['from' => $from, 'to' => $to],
+            'rooms' => $rooms,
+            'bookings' => $bookings,
+        ];
+    }
 }

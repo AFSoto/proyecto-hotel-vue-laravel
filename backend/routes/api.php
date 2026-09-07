@@ -124,5 +124,7 @@ Route::middleware('auth:api')->group(function () {
 
         // Reportes / indicadores (dashboard)
         Route::get('reports/summary', [ReportController::class, 'summary']);
+        // Tablero de ocupación (calendario)
+        Route::get('reports/occupancy', [ReportController::class, 'occupancy']);
     });
 });

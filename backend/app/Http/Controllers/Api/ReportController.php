@@ -31,4 +31,19 @@ class ReportController extends BaseController
 
         return $this->success($summary, 'Resumen de reportes.');
     }
+
+    /**
+     * Tablero de ocupación (habitaciones × días).
+     */
+    public function occupancy(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
+        ]);
+
+        $occupancy = $this->reportService->occupancy($data['from'] ?? null, $data['to'] ?? null);
+
+        return $this->success($occupancy, 'Ocupación.');
+    }
 }

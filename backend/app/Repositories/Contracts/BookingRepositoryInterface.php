@@ -3,6 +3,7 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\Booking;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * BookingRepositoryInterface
@@ -40,4 +41,10 @@ interface BookingRepositoryInterface extends RepositoryInterface
      * Conteos pendientes a una fecha: llegadas y salidas.
      */
     public function pendingCounts(string $date): array;
+
+    /**
+     * Reservas no canceladas que solapan la ventana [from, to] (tablero de
+     * ocupación), con huésped y habitación.
+     */
+    public function overlappingBetween(string $from, string $to): Collection;
 }
