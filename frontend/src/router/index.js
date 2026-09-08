@@ -83,6 +83,12 @@ const routes = [
         meta: { requiresAuth: true, title: 'Huéspedes' }
       },
       {
+        path: 'calendar',
+        name: 'calendar',
+        component: () => import('@/views/OccupancyView.vue'),
+        meta: { requiresAuth: true, title: 'Calendario' }
+      },
+      {
         path: 'check-in-out',
         name: 'check-in-out',
         component: () => import('@/views/CheckInOutView.vue'),

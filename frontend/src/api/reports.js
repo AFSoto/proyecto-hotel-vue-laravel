@@ -8,4 +8,9 @@ export const reportsApi = {
   summary(params = {}) {
     return api.get('/reports/summary', { params })
   },
+
+  // GET /reports/occupancy — tablero de ocupación (params: from, to)
+  occupancy(params = {}) {
+    return api.get('/reports/occupancy', { params })
+  },
 }
